@@ -128,8 +128,6 @@ class FilesystemResolver(object):
             # Case 6
             try:
                 import gcsfs
-                gcsfs.dask_link.register()
-                from gcsfs.dask_link import DaskGCSFileSystem
 
             except ImportError:
                 raise ValueError('Must have gcsfs installed in order to use datasets on GCS. '
@@ -138,10 +136,10 @@ class FilesystemResolver(object):
             if not self._parsed_dataset_url.netloc:
                 raise ValueError('URLs must be of the form gs://bucket/path')
 
-            fs = DaskGCSFileSystem()._get_pyarrow_filesystem()
+            fs = gcsfs.dask_link.DaskGCSFileSystem()._get_pyarrow_filesystem()
 
             self._filesystem = fs
-            self._filesystem_factory = lambda: DaskGCSFileSystem()._get_pyarrow_filesystem()
+            self._filesystem_factory = lambda: gcsfs.dask_link.DaskGCSFileSystem()._get_pyarrow_filesystem()
 
         else:
             # Case 6
