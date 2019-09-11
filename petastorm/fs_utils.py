@@ -163,8 +163,9 @@ class FilesystemResolver(object):
         if isinstance(self._filesystem, pyarrow.filesystem.S3FSWrapper):
             # s3fs expects paths of the form `bucket/path`
             return self._parsed_dataset_url.netloc + self._parsed_dataset_url.path
-        else:
-            # TODO: fix else expects paths of the form `bucket/path`
+
+        if self._parsed_dataset_url.scheme == 'gs':
+            # gcsfs expects paths of the form `gs://bucket/path`
             return 'gs://' + self._parsed_dataset_url.netloc + self._parsed_dataset_url.path
 
         return self._parsed_dataset_url.path
