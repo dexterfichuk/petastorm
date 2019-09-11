@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import pyarrow
+
 import six
 from six.moves.urllib.parse import urlparse
 
@@ -56,7 +57,7 @@ class FilesystemResolver(object):
             self._parsed_dataset_url = urlparse(self._dataset_url)
         else:
             self._parsed_dataset_url = self._dataset_url
-
+        
         if not self._parsed_dataset_url.scheme:
             # Case 1
             raise ValueError('ERROR! A scheme-less dataset url ({}) is no longer supported. '
@@ -123,10 +124,29 @@ class FilesystemResolver(object):
             self._filesystem = pyarrow.filesystem.S3FSWrapper(fs)
             self._filesystem_factory = lambda: pyarrow.filesystem.S3FSWrapper(s3fs.S3FileSystem())
 
+        elif self._parsed_dataset_url.scheme == 'gs':
+            # Case 6
+            try:
+                import gcsfs
+                gcsfs.dask_link.register()
+                from gcsfs.dask_link import DaskGCSFileSystem
+
+            except ImportError:
+                raise ValueError('Must have gcsfs installed in order to use datasets on GCS. '
+                                 'Please install gcsfs and try again.')
+
+            if not self._parsed_dataset_url.netloc:
+                raise ValueError('URLs must be of the form gs://bucket/path')
+
+            fs = DaskGCSFileSystem()._get_pyarrow_filesystem()
+
+            self._filesystem = fs
+            self._filesystem_factory = lambda: DaskGCSFileSystem()._get_pyarrow_filesystem()
+
         else:
             # Case 6
             raise ValueError('Unsupported scheme in dataset url {}. '
-                             'Currently, only "file" and "hdfs" are supported.'.format(self._parsed_dataset_url.scheme))
+                             'Currently, only "file" and "hdfs" and GCS are supported.'.format(self._parsed_dataset_url.scheme))
 
     def parsed_dataset_url(self):
         """
@@ -143,6 +163,9 @@ class FilesystemResolver(object):
         if isinstance(self._filesystem, pyarrow.filesystem.S3FSWrapper):
             # s3fs expects paths of the form `bucket/path`
             return self._parsed_dataset_url.netloc + self._parsed_dataset_url.path
+        else:
+            # TODO: fix else expects paths of the form `bucket/path`
+            return 'gs://' + self._parsed_dataset_url.netloc + self._parsed_dataset_url.path
 
         return self._parsed_dataset_url.path
 
