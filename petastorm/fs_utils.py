@@ -127,7 +127,7 @@ class FilesystemResolver(object):
         elif self._parsed_dataset_url.scheme == 'gs':
             # Case 6
             try:
-                import gcs_wrapper
+                from petastorm import gcs_wrapper
             except ImportError:
                 raise ValueError('Must have gcsfs installed in order to use datasets on GCS. '
                                  'Please install gcsfs and try again.')

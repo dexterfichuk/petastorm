@@ -100,5 +100,5 @@ class DaskGCSFileSystem(GCSFileSystem):
 
         return PyarrowWrappedGCSFS(self)
 
-dask.bytes.core._filesystems['gcs'] = DaskGCSFileSystem
-dask.bytes.core._filesystems['gs'] = DaskGCSFileSystem
+# dask.bytes.core._filesystems['gcs'] = DaskGCSFileSystem
+# dask.bytes.core._filesystems['gs'] = DaskGCSFileSystem
